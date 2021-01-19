@@ -3,10 +3,9 @@
 This is a project to create a simple operating system. The main purpose of this program is to learn more about computers.
 
 CurrentProgress:
-* Made a boot stopper, and print_string function which uses BIOS to output charaters to the screen
+*Made a Boot loader. 
+*Made a makefile to build the os image easier
 
 ToDo:
-* Finish boot
 * Drivers
 * Kernel
-* Memory managment
