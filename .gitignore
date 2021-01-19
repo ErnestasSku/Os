@@ -1,5 +1,2 @@
-
-
-print_hex.asm
-.o
-.bin
+*.o
+*.bin
