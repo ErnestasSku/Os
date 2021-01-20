@@ -17,9 +17,9 @@ jmp $
 
 %include "print_string.asm"         ;Utility functions to help debug easier
 %include "disk_load.asm"            ;functions which loads the disk 
-%include "print_string_pm.asm"
-%include "gdt.asm"
-%include "switch_to_pm.asm"
+%include "print_string_pm.asm"      ;function which prints a string in protected Mode
+%include "gdt.asm"                  ;global desrbitor table
+%include "switch_to_pm.asm"         ;switches from 16 bit real mode, to protected mode
 
 [bits 16]
 load_kernel:
