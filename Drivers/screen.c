@@ -5,6 +5,25 @@ int get_screen_offset(int col, int row)
     return (row * MAX_COLS + col) * 2;
 }
 
+int get_cursor()
+{
+    port_byte_out(REG_SCREEN_CTRL, 14);
+    int offset = port_byte_in(REG_SCREEN_DATA) << 8;
+    port_byte_out(REG_SCREEN_CTRL, 15);
+    offset += port_byte_in(REG_SCREEN_DATA);
+    return offset*2;
+}
+
+void set_cursor(int offset)
+{
+    offset /= 2;
+    port_byte_out(REG_SCREEN_CTRL, 14);
+    port_byte_out(REG_SCREEN_DATA, (unsigned char)(offset >> 8));
+    port_byte_out(REG_SCREEN_CTRL, 15);
+    port_byte_out(REG_SCREEN_DATA, (unsigned char)(offset));
+}
+
+
 
 //FIXME: It doesn't print a char after using clear screen
 void print_char(char charater, int col, int row, char attributeByte){
@@ -27,35 +46,16 @@ void print_char(char charater, int col, int row, char attributeByte){
     //col of the next row
     if(charater == '\n'){
         int rows = offset / (2*MAX_COLS);
-        offset = get_screen_offset(1, rows);
+        offset = get_screen_offset(80, row+1);
     }else{
         vidmem[offset + 1] = charater;
-        vidmem[offset] = attributeByte;
+        // vidmem[offset] = 0xff;
     }
 
     offset += 2;
-    //offset = scroll(offset);
+    offset = scroll(offset);
     set_cursor(offset);
 }
-
-int get_cursor()
-{
-    port_byte_out(REG_SCREEN_CTRL, 14);
-    int offset = port_byte_in(REG_SCREEN_DATA) << 8;
-    port_byte_out(REG_SCREEN_CTRL, 15);
-    offset += port_byte_in(REG_SCREEN_DATA);
-    return offset*2;
-}
-
-void set_cursor(int offset)
-{
-    offset /= 2;
-    port_byte_out(REG_SCREEN_CTRL, 14);
-    port_byte_out(REG_SCREEN_DATA, (unsigned char)(offset >> 8));
-    port_byte_out(REG_SCREEN_CTRL, 15);
-    port_byte_out(REG_SCREEN_DATA, (unsigned char)(offset));
-}
-
 
 void print_at(char *message, int col, int row)
 {
@@ -97,4 +97,23 @@ void clear_screen()
         
     }
     set_cursor(get_screen_offset(0, 0));
+}
+
+int scroll(int cursor_offset)
+{
+    if (cursor_offset < MAX_ROWS * MAX_COLS * 2)
+        return cursor_offset;
+    
+    for (int i = 1; i < MAX_ROWS; i++)
+    {
+        memory_copy(get_screen_offset(0, i) + VIDEO_ADDRESS, get_screen_offset(0, i-1) + VIDEO_ADDRESS, MAX_COLS * 2);
+    }
+    
+    char *last_line = get_screen_offset(0, MAX_ROWS - 1) + VIDEO_ADDRESS;
+    for (int i = 0; i < MAX_COLS*2; i++)
+        last_line[i] = 0;
+
+    cursor_offset -= 2*MAX_COLS;
+    return cursor_offset;
+    
 }
